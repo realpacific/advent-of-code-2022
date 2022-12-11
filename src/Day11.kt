@@ -1,7 +1,5 @@
-import java.math.BigInteger
-
 class Monkey(val id: Int, operation: String, test: String) {
-    private val startingItems = mutableListOf<BigInteger>()
+    private val itemsInHand = mutableListOf<Long>()
 
     var inspectionCount = 0
         private set
@@ -10,25 +8,25 @@ class Monkey(val id: Int, operation: String, test: String) {
 
     val divisibleBy by lazy {
         val testRegex = Regex("Test: divisible by (\\d+)").find(test)!!
-        testRegex.groupValues[1].toBigInteger()
+        testRegex.groupValues[1].toLong()
     }
 
-    fun addItem(item: BigInteger) {
-        startingItems.add(item)
+    fun catchItem(item: Long) {
+        itemsInHand.add(item)
     }
 
-    fun removeItem(item: BigInteger) {
-        startingItems.remove(item)
+    fun throwItem(item: Long) {
+        itemsInHand.remove(item)
     }
 
-    fun currentItems() = ArrayList(startingItems)
+    fun currentItems() = ArrayList(itemsInHand)
 
     private val operationRegex by lazy {
         Regex("Operation: new = old ([+|-|*|/]) (\\d+)").find(operation)
             ?: Regex("Operation: new = old ([+|-|*|/]) old").find(operation)!!
     }
 
-    fun calculateThrow(item: BigInteger, mapper: (BigInteger) -> BigInteger): Pair<BigInteger, Int> {
+    fun calculateThrow(item: Long, mapper: (Long) -> Long): Pair<Long, Int> {
         inspectionCount++
         val worryLevel = mapper(calculateWorryLevel(item))
         val throwTo = throwToFn(test(worryLevel))
@@ -44,9 +42,9 @@ class Monkey(val id: Int, operation: String, test: String) {
         }
     }
 
-    private fun calculateWorryLevel(value: BigInteger): BigInteger {
+    private fun calculateWorryLevel(value: Long): Long {
         val operator = operationRegex.groupValues[1]
-        val operand = operationRegex.groupValues.getOrNull(2)?.toBigIntegerOrNull() ?: value
+        val operand = operationRegex.groupValues.getOrNull(2)?.toLongOrNull() ?: value
         return when (operator) {
             "*" -> value.times(operand)
             "+" -> value.plus(operand)
@@ -56,8 +54,8 @@ class Monkey(val id: Int, operation: String, test: String) {
         }
     }
 
-    private fun test(value: BigInteger): Boolean {
-        return value.mod(divisibleBy) == BigInteger.ZERO
+    private fun test(value: Long): Boolean {
+        return value.mod(divisibleBy) == 0L
     }
 
     companion object {
@@ -66,14 +64,14 @@ class Monkey(val id: Int, operation: String, test: String) {
             val monkeyId = regex.groupValues[1].toInt()
             val monkey = Monkey(monkeyId, operation = input[2], test = input[3])
             monkey.setThrowTo(input.slice(4..5))
-            monkey.startingItems.addAll(extractAllDigits(input[1]))
+            monkey.itemsInHand.addAll(extractAllDigits(input[1]))
             return monkey
         }
 
         private fun extractAllDigits(input: String) = input.split(" ")
             .map { it.replace(",", "") }
-            .filter { it.toBigIntegerOrNull() != null }
-            .map { it.toBigInteger() }.toMutableList()
+            .filter { it.toLongOrNull() != null }
+            .map { it.toLong() }.toMutableList()
     }
 }
 
@@ -101,10 +99,10 @@ fun main() {
                 val currentItem = monkey.currentItems()
                 for (item in currentItem) {
                     val (worryLevel, throwTo) = monkey.calculateThrow(item) {
-                        it.divide((3).toBigInteger())
+                        it.div((3).toLong())
                     }
-                    monkeys[throwTo].addItem(worryLevel)
-                    monkey.removeItem(item)
+                    monkey.throwItem(item)
+                    monkeys[throwTo].catchItem(worryLevel)
                 }
             }
         }
@@ -117,7 +115,7 @@ fun main() {
 
     fun part2(input: List<String>): Long {
         val monkeys = buildMonkeys(input)
-        val modulo = monkeys.map(Monkey::divisibleBy).fold(BigInteger.ONE) { acc, current -> acc.multiply(current) }
+        val modulo = monkeys.map(Monkey::divisibleBy).fold(1L) { acc, current -> acc.times(current) }
         repeat(10000) {
             monkeys.forEach { monkey ->
                 val currentItem = monkey.currentItems()
@@ -125,8 +123,8 @@ fun main() {
                     val (worryLevel, throwTo) = monkey.calculateThrow(item) {
                         it.mod(modulo)
                     }
-                    monkeys[throwTo].addItem(worryLevel)
-                    monkey.removeItem(item)
+                    monkey.throwItem(item)
+                    monkeys[throwTo].catchItem(worryLevel)
                 }
             }
         }
