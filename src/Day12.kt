@@ -53,20 +53,23 @@ fun main() {
                 Int.MAX_VALUE
             }
         }
-        shortestDistanceMatrix[endPosition.first][endPosition.second] = 0
+
+        shortestDistanceMatrix[endPosition.first][endPosition.second] = 0 // distance of E from destination is 0
+
         val visited = mutableSetOf<Step>()
-        visited.add(steps.first().first())
+        visited.add(steps.first().first()) // add E to visited
+
         while (steps.isNotEmpty()) {
             val currentSteps = steps.remove()
             currentSteps
-                .forEach { step ->
-                    visited.add(step)
-                    val nextMoves = step.generateNextSteps(heightmap)
-                        .onEach {
-                            shortestDistanceMatrix[it.position.first][it.position.second] =
+                .forEach { currentStep ->
+                    visited.add(currentStep)
+                    val nextMoves = currentStep.generateNextSteps(heightmap)
+                        .onEach { next ->
+                            shortestDistanceMatrix[next.position.first][next.position.second] =
                                 minOf(
-                                    shortestDistanceMatrix[step.position.first][step.position.second] + 1,
-                                    shortestDistanceMatrix[it.position.first][it.position.second]
+                                    shortestDistanceMatrix[currentStep.position.first][currentStep.position.second] + 1,
+                                    shortestDistanceMatrix[next.position.first][next.position.second]
                                 )
                         }
                         .filter { it !in visited }
