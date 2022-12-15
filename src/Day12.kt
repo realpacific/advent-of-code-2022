@@ -1,8 +1,6 @@
 import java.util.*
 
-private typealias Position = Pair<Int, Int>
-
-private data class Step(val position: Position) {
+private data class Step(val position: Coordinate) {
     fun generateNextSteps(heightmap: Array<Array<Char>>): List<Step> {
         return arrayOf(
             Step(this.position.first + 1 to this.position.second),
@@ -42,11 +40,11 @@ fun main() {
     }
 
     /**
-     * Start from [endPosition], breadth first calculate distance of its neighbours
+     * Start from [endCoordinate], breadth first calculate distance of its neighbours
      */
-    fun buildShortestPathMatrix(heightmap: Array<Array<Char>>, endPosition: Position): List<MutableList<Int>> {
+    fun buildShortestPathMatrix(heightmap: Array<Array<Char>>, endCoordinate: Coordinate): List<MutableList<Int>> {
         val steps: Queue<MutableList<Step>> = ArrayDeque()
-        steps.add(mutableListOf(Step(endPosition)))
+        steps.add(mutableListOf(Step(endCoordinate)))
 
         val shortestDistanceMatrix = List(heightmap.size) {
             MutableList(heightmap.first().size) {
@@ -54,7 +52,7 @@ fun main() {
             }
         }
 
-        shortestDistanceMatrix[endPosition.first][endPosition.second] = 0 // distance of E from destination is 0
+        shortestDistanceMatrix[endCoordinate.first][endCoordinate.second] = 0 // distance of E from destination is 0
 
         val visited = mutableSetOf<Step>()
         visited.add(steps.first().first()) // add E to visited
@@ -84,32 +82,32 @@ fun main() {
 
 
     fun part1(input: List<String>): Int {
-        var endPosition = 0 to 0
-        var startPosition = 0 to 0
+        var endCoordinate = 0 to 0
+        var startCoordinate = 0 to 0
         val heightmap = Array(input.size) { row ->
             Array(input.first().length) { col ->
                 val elevation = input[row][col]
-                if (elevation == 'E') endPosition = row to col
-                if (elevation == 'S') startPosition = row to col
+                if (elevation == 'E') endCoordinate = row to col
+                if (elevation == 'S') startCoordinate = row to col
                 elevation
             }
         }
-        return buildShortestPathMatrix(heightmap, endPosition)[startPosition.first][startPosition.second]
+        return buildShortestPathMatrix(heightmap, endCoordinate)[startCoordinate.first][startCoordinate.second]
     }
 
     fun part2(input: List<String>): Int {
-        var endPosition = 0 to 0
-        val possibleStartLocation = mutableListOf<Position>()
+        var endCoordinate = 0 to 0
+        val possibleStartLocation = mutableListOf<Coordinate>()
         val heightmap = Array(input.size) { row ->
             Array(input.first().length) { col ->
                 val elevation = input[row][col]
-                if (elevation == 'E') endPosition = row to col
+                if (elevation == 'E') endCoordinate = row to col
                 if (elevation == 'S' || elevation == 'a') possibleStartLocation.add(row to col)
                 elevation
             }
         }
 
-        val path = buildShortestPathMatrix(heightmap, endPosition)
+        val path = buildShortestPathMatrix(heightmap, endCoordinate)
         return possibleStartLocation.minOf { path[it.first][it.second] }
     }
 
